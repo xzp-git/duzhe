@@ -17,7 +17,7 @@
 import { computed, defineComponent } from 'vue'
 import { useRoute } from 'vue-router'
 import { useStore } from 'vuex'
-import { PostList } from '../components/PostList.vue'
+import PostList from '../components/PostList.vue'
 export default defineComponent({
   components: {
     PostList
@@ -26,6 +26,7 @@ export default defineComponent({
     const route = useRoute()
     const store = useStore()
     const currentId = +route.params.id
+    console.log(currentId)
     const column = computed(() => store.getters.getColumnById(currentId))
     console.log(column)
     const list = computed(() => store.getters.getPostsByCid(currentId))

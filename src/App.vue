@@ -28,7 +28,7 @@
 
 <script lang="ts">
 import { defineComponent, computed } from 'vue'
-import GlobalHeader, { UserProps } from './components/GlobalHeader.vue'
+import GlobalHeader from './components/GlobalHeader.vue'
 import { useStore } from 'vuex'
 // import ValidateInput, { RulesProp } from './components/ValidateInput.vue'
 // import ValidateForm from './components/ValidateForm.vue'
