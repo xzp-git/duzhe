@@ -1,8 +1,8 @@
 <template>
   <nav class="navbar navbar-dark bg-primary justify-content-between mb-4 px-4">
-    <a href="#" class="navbar-brand">读者专栏</a>
+    <router-link :to="'/'" class="navbar-brand">读者专栏</router-link>
     <ul v-if="!user.isLogin" class="list-inline mb-0">
-      <li class="list-inline-item"><a href="#" class="btn btn-outline-light">登陆</a></li>
+      <li class="list-inline-item"><router-link to="/login" class="btn btn-outline-light">登陆</router-link></li>
       <li class="list-inline-item"><a href="#" class="btn btn-outline-light">注册</a></li>
     </ul>
     <ul v-else class="list-inline mb-0">

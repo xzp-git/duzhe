@@ -12,13 +12,27 @@
       </div>
     </section>
     <h4 class="font-weight-bold text-center">发现精彩</h4>
+    <ColumnList :list="list" ></ColumnList>
   </div>
 </template>
 
-<script>
-export default {
-
-}
+<script lang="ts">
+import { computed, defineComponent } from 'vue'
+import { useStore } from 'vuex'
+import ColumnList from '../components/ColumnList.vue'
+import { GlobalDataProps } from '../store/index'
+export default defineComponent({
+  components: {
+    ColumnList
+  },
+  setup () {
+    const store = useStore<GlobalDataProps>()
+    const list = computed(() => store.state.columns)
+    return {
+      list: list
+    }
+  }
+})
 </script>
 
 <style>
