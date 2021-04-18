@@ -1,6 +1,8 @@
 <template>
   <div class="container">
     <GlobalHeader :user="currentUser"></GlobalHeader>
+    <Loader v-if="isLoading" text = '拼命加载中...' background="rgba(0,0,0,.6)"></Loader>
+    <Message type="error" :message="error.message"></Message>
     <router-view></router-view>
     <footer class="text-center py-4 text-secondary bg-light mt-6">
       <small>
@@ -29,6 +31,8 @@
 <script lang="ts">
 import { defineComponent, computed } from 'vue'
 import GlobalHeader from './components/GlobalHeader.vue'
+import Loader from './components/Loader.vue'
+import Message from './components/Message.vue'
 import { useStore } from 'vuex'
 // import ValidateInput, { RulesProp } from './components/ValidateInput.vue'
 // import ValidateForm from './components/ValidateForm.vue'
@@ -41,27 +45,22 @@ import 'bootstrap/dist/css/bootstrap.min.css'
 export default defineComponent({
   name: 'App',
   components: {
-    GlobalHeader
+    GlobalHeader,
+    Loader,
+    Message
     // ValidateInput,
     // ValidateForm
   },
   setup () {
-    // const emailRules: RulesProp = [
-    //   { type: 'required', message: '电子邮箱地址不能为空' },
-    //   { type: 'email', message: '请输入正确的电子邮箱格式' }
-    // ]
-    // const pasRules: RulesProp = [
-    //   { type: 'required', message: '密码不能为空' }
-    // ]
-    // const inputVal = ref('')
-    // const inputPas = ref('')
-    // const onFormSubmit = (res: boolean) => {
-    //   console.log('res', res)
-    // }
     const store = useStore()
+
     const currentUser = computed(() => store.state.user)
+    const isLoading = computed(() => store.state.loading)
+    const error = computed(() => store.state.error)
     return {
-      currentUser
+      currentUser,
+      isLoading,
+      error
       // userData
       // emailRules,
       // inputVal,
