@@ -1,5 +1,10 @@
 import { Commit, createStore } from 'vuex'
 import axios from 'axios'
+export interface ResponseType<P> {
+  code: number;
+  msg: string;
+  data: P;
+}
 export interface UserProps {
     isLogin: boolean;
     nickName?: string;
@@ -7,9 +12,10 @@ export interface UserProps {
     column?: string;
     email?:string
 }
-interface ImageProps {
+export interface ImageProps {
   _id?: string;
   url?: string;
+  createdAt?: string
 }
 export interface ColumnProps {
   _id:string;
@@ -18,12 +24,12 @@ export interface ColumnProps {
   description:string
 }
 export interface PostProps {
-  _id: string;
+  _id?: string;
   title: string;
   excerpt?: string
   content: string;
   image?: ImageProps;
-  createdAt: string;
+  createdAt?: string;
   column: string
 }
 export interface GlobalErrorProps {
@@ -83,6 +89,12 @@ const store = createStore<GlobalDataProps>({
       state.token = token
       localStorage.setItem('token', token)
       axios.defaults.headers.common.Authorization = `Bearer ${token}`
+    },
+    logout (state) {
+      state.token = ''
+      state.user = { isLogin: false }
+      localStorage.remove('token')
+      delete axios.defaults.headers.common.Authorization
     },
     setError (state, e: GlobalErrorProps) {
       state.error = e

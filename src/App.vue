@@ -2,7 +2,6 @@
   <div class="container">
     <GlobalHeader :user="currentUser"></GlobalHeader>
     <Loader v-if="isLoading" text = '拼命加载中...' background="rgba(0,0,0,.6)"></Loader>
-    <Message type="error" :message="error.message"></Message>
     <router-view></router-view>
     <footer class="text-center py-4 text-secondary bg-light mt-6">
       <small>
@@ -29,11 +28,12 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed } from 'vue'
+import { defineComponent, computed, watch } from 'vue'
 import GlobalHeader from './components/GlobalHeader.vue'
 import Loader from './components/Loader.vue'
-import Message from './components/Message.vue'
 import { useStore } from 'vuex'
+import createMessage from './hooks/createMessage'
+import { GlobalDataProps } from './store/index'
 // import ValidateInput, { RulesProp } from './components/ValidateInput.vue'
 // import ValidateForm from './components/ValidateForm.vue'
 import 'bootstrap/dist/css/bootstrap.min.css'
@@ -46,17 +46,22 @@ export default defineComponent({
   name: 'App',
   components: {
     GlobalHeader,
-    Loader,
-    Message
+    Loader
     // ValidateInput,
     // ValidateForm
   },
   setup () {
-    const store = useStore()
+    const store = useStore<GlobalDataProps>()
 
     const currentUser = computed(() => store.state.user)
     const isLoading = computed(() => store.state.loading)
     const error = computed(() => store.state.error)
+    watch(() => error.value.status, () => {
+      const { status, message } = error.value
+      if (status && message) {
+        createMessage(message, 'error')
+      }
+    })
     return {
       currentUser,
       isLoading,

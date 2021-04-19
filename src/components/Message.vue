@@ -10,7 +10,8 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType, onUnmounted, ref } from 'vue'
+import { defineComponent, PropType, ref } from 'vue'
+import useDOMCreate from '../hooks/useDOMCreate'
 export type MessageType = 'success' | 'error' | 'default'
 export default defineComponent({
   props: {
@@ -22,12 +23,7 @@ export default defineComponent({
   },
   emits: ['close-message'],
   setup (props, context) {
-    const node = document.createElement('div')
-    node.id = 'message'
-    document.body.appendChild(node)
-    onUnmounted(() => {
-      document.body.removeChild(node)
-    })
+    useDOMCreate('message')
     const isVisible = ref(true)
     const classObject = {
       'alert-success': props.type === 'success',
