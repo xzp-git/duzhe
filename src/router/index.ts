@@ -5,6 +5,7 @@ import Login from '../views/Login.vue'
 import Signup from '../views/SignUp.vue'
 import ColumnDetail from '../views/ColumnDetail.vue'
 import CreatePost from '../views/CreatePost.vue'
+import PostsDetail from '../views/PostsDetail.vue'
 import store from '../store/index'
 const routerHistory = createWebHistory()
 const router = createRouter({
@@ -40,6 +41,11 @@ const router = createRouter({
       meta: {
         requiredLogin: true
       }
+    },
+    {
+      path: '/postdetail/:id',
+      name: 'postdetail',
+      component: PostsDetail
     }
   ]
 })

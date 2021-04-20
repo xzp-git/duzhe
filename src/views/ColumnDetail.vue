@@ -5,7 +5,7 @@
         <img :src="column.avatar && column.avatar.fitUrl" :alt="column.title" class="rounded-circle border w-100">
       </div>
       <div class="col-9">
-        <h4>{{column.title}}</h4>
+        <router-link :to="`/postdetail/${column._id}`"><h4>{{column.title}}</h4></router-link>
         <p class="text-muted">{{column.description}}</p>
       </div>
     </div>

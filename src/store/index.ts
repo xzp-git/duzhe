@@ -135,6 +135,9 @@ const store = createStore<GlobalDataProps>({
     },
     getPostsByCid: (state) => (cid:string) => {
       return state.posts.filter(c => c.column === cid)
+    },
+    getCurrentPost: (state) => (id: string) => {
+      return state.posts.find(c => c._id === id)
     }
   }
 })
