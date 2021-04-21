@@ -5,7 +5,7 @@
         <img :src="column.avatar && column.avatar.fitUrl" :alt="column.title" class="rounded-circle border w-100">
       </div>
       <div class="col-9">
-        <router-link :to="`/postdetail/${column._id}`"><h4>{{column.title}}</h4></router-link>
+        <h4>{{column.title}}</h4>
         <p class="text-muted">{{column.description}}</p>
       </div>
     </div>
@@ -19,7 +19,7 @@ import { useRoute } from 'vue-router'
 import { useStore } from 'vuex'
 import PostList from '../components/PostList.vue'
 import { ColumnProps, GlobalDataProps } from '../store/index'
-import { generateFitUrl } from '../helper'
+import { generateFitUrl, addColumnAvatar } from '../helper'
 export default defineComponent({
   components: {
     PostList
@@ -35,7 +35,7 @@ export default defineComponent({
     const column = computed(() => {
       const selectColumn = store.getters.getColumnById(currentId) as ColumnProps | undefined
       if (selectColumn) {
-        generateFitUrl(selectColumn, 100, 100)
+        addColumnAvatar(selectColumn, 100, 100)
       }
       return selectColumn
     })

@@ -34,18 +34,41 @@
 import { computed, defineComponent, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRoute } from 'vue-router'
-import { GlobalDataProps } from '../store/index'
+import MarkdownIt from 'markdown-it'
+import UserProfile from '../components/UserProfile.vue'
+import { GlobalDataProps, PostProps, ImageProps } from '../store/index'
 export default defineComponent({
+  components: {
+    UserProfile
+  },
   setup () {
     const route = useRoute()
     const store = useStore<GlobalDataProps>()
     const currentId = route.params.id
+    const md = new MarkdownIt()
     onMounted(() => {
-      store.dispatch('fetchPosts', currentId)
+      store.dispatch('fetchPost', currentId)
     })
-    const currentPost = computed(() => store.getters.getCurrentPost(currentId))
+    const currentPost = computed<PostProps>(() => store.getters.getCurrentPost(currentId))
+    const currentHTML = computed(() => {
+      const { content, isHTML } = currentPost.value
+      if (currentPost.value && content) {
+        return isHTML ? content : md.render(content)
+      }
+      return null
+    })
+    const currentImageUrl = computed(() => {
+      if (currentPost.value && currentPost.value.image) {
+        const { image } = currentPost.value
+        return (image as ImageProps).url + '?x-oss-process=image/resize,w_850'
+      } else {
+        return null
+      }
+    })
     return {
-
+      currentPost,
+      currentImageUrl,
+      currentHTML
     }
   }
 })

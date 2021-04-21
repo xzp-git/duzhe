@@ -5,19 +5,22 @@ export interface ResponseType<P> {
   msg: string;
   data: P;
 }
+export interface ImageProps {
+  _id?: string;
+  url?: string;
+  fitUrl?: string;
+  createdAt?: string;
+}
 export interface UserProps {
     isLogin: boolean;
     nickName?: string;
     _id?: string;
     column?: string;
-    email?:string
+    email?:string;
+    avatar?: ImageProps;
+    description?: string;
 }
-export interface ImageProps {
-  _id?: string;
-  url?: string;
-  fitUrl?: string;
-  createdAt?: string
-}
+
 export interface ColumnProps {
   _id:string;
   title:string;
@@ -32,7 +35,8 @@ export interface PostProps {
   image?: ImageProps | string;
   createdAt?: string;
   column: string;
-  author: string
+  author: string;
+  isHTML?: boolean;
 }
 export interface GlobalErrorProps {
   status: boolean;
@@ -81,6 +85,9 @@ const store = createStore<GlobalDataProps>({
     fetchPosts (state, rawData) {
       state.posts = rawData.data.list
     },
+    fetchPost (state, rawData) {
+      state.posts = [rawData.data]
+    },
     setLoading (state, status) {
       state.loading = status
     },
@@ -113,6 +120,9 @@ const store = createStore<GlobalDataProps>({
     fetchPosts ({ commit }, cid) {
       return getAndCommit(`/api/columns/${cid}/posts`, 'fetchPosts', commit)
     },
+    fetchPost ({ commit }, cid) {
+      return getAndCommit(`/api/posts/${cid}`, 'fetchPost', commit)
+    },
     fetchCurrentUser ({ commit }) {
       return getAndCommit('/api/user/current', 'fetchCurrentUser', commit)
     },
@@ -137,6 +147,8 @@ const store = createStore<GlobalDataProps>({
       return state.posts.filter(c => c.column === cid)
     },
     getCurrentPost: (state) => (id: string) => {
+      console.log(state.posts)
+
       return state.posts.find(c => c._id === id)
     }
   }
