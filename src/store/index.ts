@@ -1,5 +1,5 @@
 import { Commit, createStore } from 'vuex'
-import axios from 'axios'
+import axios, { AxiosRequestConfig } from 'axios'
 export interface ResponseType<P> {
   code: number;
   msg: string;
@@ -35,7 +35,7 @@ export interface PostProps {
   image?: ImageProps | string;
   createdAt?: string;
   column: string;
-  author: string;
+  author: string | UserProps;
   isHTML?: boolean;
 }
 export interface GlobalErrorProps {
@@ -60,6 +60,11 @@ const postAndCommit = async (url:string, mutationsName:string, commit:Commit, pa
   commit(mutationsName, data)
   return data
 }
+const asyncAndCommit = async (url:string, mutationsName:string, commit:Commit, config:AxiosRequestConfig = { method: 'get' }) => {
+  const { data } = await axios(url, config)
+  commit(mutationsName, data)
+  return data
+}
 const store = createStore<GlobalDataProps>({
   state: {
     error: { status: false },
@@ -76,6 +81,9 @@ const store = createStore<GlobalDataProps>({
     createPost (state, newPost) {
       state.posts.push(newPost)
     },
+    deletePost (state, { data }) {
+      state.posts = state.posts.filter(post => post._id !== data._id)
+    },
     fetchColumns (state, rawData) {
       state.columns = rawData.data.list
     },
@@ -87,6 +95,15 @@ const store = createStore<GlobalDataProps>({
     },
     fetchPost (state, rawData) {
       state.posts = [rawData.data]
+    },
+    updatePost (state, { data }) {
+      state.posts = state.posts.map(post => {
+        if (post._id === data._id) {
+          return data
+        } else {
+          return post
+        }
+      })
     },
     setLoading (state, status) {
       state.loading = status
@@ -103,7 +120,7 @@ const store = createStore<GlobalDataProps>({
     logout (state) {
       state.token = ''
       state.user = { isLogin: false }
-      localStorage.remove('token')
+      localStorage.removeItem('token')
       delete axios.defaults.headers.common.Authorization
     },
     setError (state, e: GlobalErrorProps) {
@@ -123,6 +140,12 @@ const store = createStore<GlobalDataProps>({
     fetchPost ({ commit }, cid) {
       return getAndCommit(`/api/posts/${cid}`, 'fetchPost', commit)
     },
+    updatePost ({ commit }, { cid, payload }) {
+      return asyncAndCommit(`/api/posts/${cid}`, 'updatePost', commit, {
+        method: 'patch',
+        data: payload
+      })
+    },
     fetchCurrentUser ({ commit }) {
       return getAndCommit('/api/user/current', 'fetchCurrentUser', commit)
     },
@@ -131,6 +154,11 @@ const store = createStore<GlobalDataProps>({
     },
     createPost ({ commit }, payload) {
       return postAndCommit('/api/posts', 'createPost', commit, payload)
+    },
+    deletePost ({ commit }, id) {
+      return asyncAndCommit(`/api/posts/${id}`, 'deletePost', commit, {
+        method: 'delete'
+      })
     },
     loginAndFetch ({ dispatch }, loginData) {
       return dispatch('login', loginData).then(() => {

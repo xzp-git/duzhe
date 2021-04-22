@@ -1,14 +1,17 @@
 <template>
 <div class="validate-input-container pd-3">
+  <!--  @input="updateInput"
+  :value="inputRef.val" -->
   <input
   v-if="tag !== 'textarea'"
   v-bind="$attrs"
   class="form-control"
   :class="{'is-invalid':inputRef.error}"
   @blur="validateInputs"
-  @input="updateInput"
-  :value="inputRef.val"
+  v-model="inputRef.val"
   >
+  <!-- @input="updateInput"
+  :value="inputRef.val" -->
   <textarea
   v-else
   rows="10"
@@ -16,8 +19,7 @@
   class="form-control"
   :class="{'is-invalid':inputRef.error}"
   @blur="validateInputs"
-  @input="updateInput"
-  :value="inputRef.val"
+  v-model="inputRef.val"
   >
   </textarea>
   <span v-if="inputRef.error" class="invalid-feedback">{{inputRef.message}}</span>
@@ -25,7 +27,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, reactive, PropType } from 'vue'
+import { defineComponent, reactive, PropType, watch, computed } from 'vue'
 import { emitter } from '@/components/ValidateForm.vue'
 type ValidateFunc = () => boolean
 const emailReg = /^[a-z0-9]+([._\\-]*[a-z0-9])*@([a-z0-9]+[-a-z0-9]*[a-z0-9]+.){1,63}[a-z0-9]+$/
@@ -49,15 +51,20 @@ export default defineComponent({
   inheritAttrs: false,
   setup (props, context) {
     const inputRef = reactive({
-      val: props.modelValue || '',
+      val: computed({
+        get: () => props.modelValue || '',
+        set: val => {
+          context.emit('update:modelValue', val)
+        }
+      }),
       error: false,
       message: ''
     })
-    const updateInput = (e: KeyboardEvent) => {
-      const targetValue = (e.target as HTMLInputElement).value
-      inputRef.val = targetValue
-      context.emit('update:modelValue', targetValue)
-    }
+    // const updateInput = (e: KeyboardEvent) => {
+    //   const targetValue = (e.target as HTMLInputElement).value
+    //   inputRef.val = targetValue
+    //   context.emit('update:modelValue', targetValue)
+    // }
     const validateInputs :ValidateFunc = () => {
       if (props.rules) {
         const allPassed = props.rules.every(rule => {
@@ -87,8 +94,8 @@ export default defineComponent({
     emitter.emit('form-item-created', validateInputs)
     return {
       inputRef,
-      validateInputs,
-      updateInput
+      validateInputs
+      // updateInput
     }
   }
 })
