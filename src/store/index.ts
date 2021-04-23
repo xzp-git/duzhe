@@ -46,27 +46,31 @@ export interface GlobalErrorProps {
   status: boolean;
   message?:string
 }
+interface GlobalColumns {
+  data: ListProps<ColumnProps>;
+  total: number;
+  currentPage: number;
+}
+interface GlobalPosts {
+  data: ListProps<PostProps>;
+  loadedColumns: ListProps<{total?:number; currentPage?:number}>;
+}
 export interface GlobalDataProps {
   error:GlobalErrorProps
    token:string;
-    columns: ListProps<ColumnProps>;
-    posts: ListProps<PostProps>;
+    columns: GlobalColumns;
+    posts: GlobalPosts;
     user:UserProps,
     loading:false,
 }
-const getAndCommit = async (url:string, mutationsName:string, commit:Commit) => {
-  const { data } = await axios.get(url)
-  commit(mutationsName, data)
-  return data
-}
-const postAndCommit = async (url:string, mutationsName:string, commit:Commit, payload:any) => {
-  const { data } = await axios.post(url, payload)
-  commit(mutationsName, data)
-  return data
-}
-const asyncAndCommit = async (url:string, mutationsName:string, commit:Commit, config:AxiosRequestConfig = { method: 'get' }) => {
+const asyncAndCommit = async (url:string, mutationsName:string, commit:Commit, config:AxiosRequestConfig = { method: 'get' }, extraData?: any) => {
   const { data } = await axios(url, config)
-  commit(mutationsName, data)
+  if (extraData) {
+    commit(mutationsName, { data, extraData })
+  } else {
+    commit(mutationsName, data)
+  }
+
   return data
 }
 const store = createStore<GlobalDataProps>({
@@ -74,8 +78,8 @@ const store = createStore<GlobalDataProps>({
     error: { status: false },
     token: localStorage.getItem('token') || '',
     loading: false,
-    columns: {},
-    posts: {},
+    columns: { data: {}, total: 0, currentPage: 0 },
+    posts: { data: {}, loadedColumns: {} },
     user: { isLogin: false }
   },
   mutations: {
@@ -83,25 +87,36 @@ const store = createStore<GlobalDataProps>({
     //   state.user = { ...state.user, isLogin: true, name: 'viking', columnId: 2 }
     // },
     createPost (state, newPost) {
-      state.posts[newPost._id] = newPost
+      state.posts.data[newPost._id] = newPost
     },
     deletePost (state, { data }) {
-      delete state.posts[data._id]
+      delete state.posts.data[data._id]
     },
     fetchColumns (state, rawData) {
-      state.columns = arrToObj(rawData.data.list)
+      const { data } = state.columns
+      const { list, count, currentPage } = rawData.data
+      state.columns = {
+        data: { ...data, ...arrToObj(list) },
+        total: count,
+        currentPage: currentPage * 1
+      }
     },
     fetchColumn (state, rawData) {
-      state.columns[rawData.data._id] = rawData.data
+      state.columns.data[rawData.data._id] = rawData.data
     },
-    fetchPosts (state, rawData) {
-      state.posts = arrToObj(rawData.data.list)
+    fetchPosts (state, { data: rawData, extraData: columnId }) {
+      state.posts.data = { ...state.posts.data, ...arrToObj(rawData.data.list) }
+      const { currentPage, count } = rawData.data
+      console.log(rawData.data)
+
+      state.posts.loadedColumns = { ...state.posts.loadedColumns, ...{ [columnId]: { total: count, currentPage: currentPage } } }
+      // state.posts.loadedColumns.push(columnId)
     },
     fetchPost (state, rawData) {
-      state.posts[rawData.data._id] = rawData.data
+      state.posts.data[rawData.data._id] = rawData.data
     },
     updatePost (state, { data }) {
-      state.posts[data._id] = data
+      state.posts.data[data._id] = data
     },
     setLoading (state, status) {
       state.loading = status
@@ -126,17 +141,36 @@ const store = createStore<GlobalDataProps>({
     }
   },
   actions: {
-    fetchColumns ({ commit }) {
-      return getAndCommit('/api/columns', 'fetchColumns', commit)
+    fetchColumns ({ state, commit }, params = {}) {
+      const { currentPage = 1, pageSize = 6 } = params
+      // if (!state.columns.isLoaded) {
+      //   return asyncAndCommit('/api/columns', 'fetchColumns', commit, { method: 'get' })
+      // }
+      if (state.columns.currentPage < currentPage) {
+        return asyncAndCommit(`/api/columns?currentPage=${currentPage}&pageSize=${pageSize}`, 'fetchColumns', commit, { method: 'get' })
+      }
     },
-    fetchColumn ({ commit }, cid) {
-      return getAndCommit(`/api/columns/${cid}`, 'fetchColumn', commit)
+    fetchColumn ({ state, commit }, cid) {
+      if (!state.columns.data[cid]) {
+        return asyncAndCommit(`/api/columns/${cid}`, 'fetchColumn', commit, { method: 'get' })
+      }
     },
-    fetchPosts ({ commit }, cid) {
-      return getAndCommit(`/api/columns/${cid}/posts`, 'fetchPosts', commit)
+    fetchPosts ({ state, commit }, params = {}) {
+      const { cid, currentPage = 1, pageSize = 3 } = params
+      console.log(cid)
+      if (!state.posts.loadedColumns[cid]) {
+        console.log(11111111111)
+
+        return asyncAndCommit(`/api/columns/${cid}/posts?currentPage=${currentPage}&pageSize=${pageSize}`, 'fetchPosts', commit, { method: 'get' }, cid)
+      }
     },
-    fetchPost ({ commit }, cid) {
-      return getAndCommit(`/api/posts/${cid}`, 'fetchPost', commit)
+    fetchPost ({ state, commit }, cid) {
+      const currentPost = state.posts.data[cid]
+      if (!currentPost || !currentPost.content) {
+        return asyncAndCommit(`/api/posts/${cid}`, 'fetchPost', commit, { method: 'get' })
+      } else {
+        return Promise.resolve({ data: currentPost })
+      }
     },
     updatePost ({ commit }, { cid, payload }) {
       return asyncAndCommit(`/api/posts/${cid}`, 'updatePost', commit, {
@@ -145,13 +179,13 @@ const store = createStore<GlobalDataProps>({
       })
     },
     fetchCurrentUser ({ commit }) {
-      return getAndCommit('/api/user/current', 'fetchCurrentUser', commit)
+      return asyncAndCommit('/api/user/current', 'fetchCurrentUser', commit, { method: 'get' })
     },
     login ({ commit }, payload) {
-      return postAndCommit('/api/user/login', 'login', commit, payload)
+      return asyncAndCommit('/api/user/login', 'login', commit, { method: 'post', data: payload })
     },
     createPost ({ commit }, payload) {
-      return postAndCommit('/api/posts', 'createPost', commit, payload)
+      return asyncAndCommit('/api/posts', 'createPost', commit, { method: 'post', data: payload })
     },
     deletePost ({ commit }, id) {
       return asyncAndCommit(`/api/posts/${id}`, 'deletePost', commit, {
@@ -165,17 +199,23 @@ const store = createStore<GlobalDataProps>({
     }
   },
   getters: {
+    getPostPage: (state) => (id: string) => {
+      console.log(id)
+      if (state.posts.loadedColumns[id]) {
+        return state.posts.loadedColumns[id]
+      }
+    },
     getColumns: (state) => {
-      return objToArr(state.columns)
+      return objToArr(state.columns.data)
     },
     getColumnById: (state) => (id:string) => {
-      return state.columns[id]
+      return state.columns.data[id]
     },
     getPostsByCid: (state) => (cid:string) => {
-      return objToArr(state.posts).filter(c => c.column === cid)
+      return objToArr(state.posts.data).filter(c => c.column === cid)
     },
     getCurrentPost: (state) => (id: string) => {
-      return state.posts[id]
+      return state.posts.data[id]
     }
   }
 })

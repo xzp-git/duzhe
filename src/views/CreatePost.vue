@@ -105,7 +105,7 @@ export default defineComponent({
           store.dispatch(actionName, sendData).then(() => {
             createMessage(isEditMode ? '更新成功，2秒后跳转到文章' : '发表成功，2秒后跳转到文章', 'success', 2000)
             setTimeout(() => {
-              router.push({ name: 'column', params: { id: column } })
+              router.push({ name: 'postdetail', params: { id: route.query.id as string } })
             }, 2000)
           })
         }
