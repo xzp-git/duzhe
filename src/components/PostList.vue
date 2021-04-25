@@ -5,7 +5,7 @@
         <h4><router-link :to="`/postdetail/${post._id}`">{{post.title}}</router-link></h4>
         <div class="row my-3 align-items-center">
           <div  class="col-4">
-            <img :src="post.image && post.image.fitUrl" :alt="post.title" class="rounded-lg w-100">
+            <img :src="post.image && post.image.url" :alt="post.title" class="rounded-lg w-100">
           </div>
           <p :class="{'col-8': post.image}" class="text-muted">{{post.excerpt}}</p>
         </div>
@@ -26,18 +26,18 @@ export default defineComponent({
       required: true,
       type: Array as PropType<PostProps[]>
     }
-  },
-  setup (props) {
-    const posts = computed(() => {
-      return props.list.map(post => {
-        generateFitUrl(post.image as ImageProps, 200, 110, ['m_fill'])
-        return post
-      })
-    })
-    return {
-      posts
-    }
   }
+  // setup (props) {
+  //   const posts = computed(() => {
+  //     return props.list.map(post => {
+  //       generateFitUrl(post.image as ImageProps, 200, 110, ['m_fill'])
+  //       return post
+  //     })
+  //   })
+  //   return {
+  //     posts
+  //   }
+  // }
 })
 </script>
 
